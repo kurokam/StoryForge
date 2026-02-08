@@ -40,7 +40,6 @@ async def generate_story(kind: str):
 
             data = r.json()
 
-            # Güvenli parse (Groq/OpenAI uyumlu format)
             choices = data.get("choices")
             if not choices:
                 return f"❌ Beklenmeyen cevap formatı:\n{data}"
@@ -53,13 +52,5 @@ async def generate_story(kind: str):
 
             return content
 
-    except Exception as e:
-        return f"❌ HTTP hata: {e}"    try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            r = await client.post(URL, headers=headers, json=payload)
-            if r.status_code != 200:
-                return f"❌ Groq {r.status_code}: {r.text}"
-            data = r.json()
-            return data["choices"][0]["message"]["content"]
     except Exception as e:
         return f"❌ HTTP hata: {e}"
