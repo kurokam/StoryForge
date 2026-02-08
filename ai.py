@@ -17,13 +17,16 @@ async def generate_story(kind: str):
             {"role": "user", "content": f"Create a viral {kind} short story for faceless anime-style video."}
         ],
         "temperature": 0.9,
-        "max_tokens": 300
+        "max_tokens": 300,
+        "stream": False
     }
 
-    async with httpx.AsyncClient(timeout=30) as client:
-        r = await client.post(GROQ_URL, headers=headers, json=payload)
-        # Debug için status ve body’yi döndür
-        if r.status_code != 200:
-            return f"❌ Groq status={r.status_code}\n{r.text}"
-        data = r.json()
-        return data["choices"][0]["message"]["content"]
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.post(GROQ_URL, headers=headers, json=payload)
+            if r.status_code != 200:
+                return f"❌ Groq status={r.status_code}\n{r.text}"
+            data = r.json()
+            return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        return f"❌ İstek hatası: {e}"
