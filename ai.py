@@ -2,7 +2,7 @@ import os
 import httpx
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_URL = "https://api.groq.com/openai/v1/responses"
 
 async def generate_story(kind: str):
     headers = {
@@ -10,15 +10,17 @@ async def generate_story(kind: str):
         "Content-Type": "application/json",
     }
 
+    prompt = (
+        "You are StoryForge AI. Create a viral 15-second YouTube Shorts script in Turkish. "
+        "Return structured output with: HOOK, SCENE, TWIST, CAPCUT_PROMPT, TAGS. "
+        f"Theme: {kind}."
+    )
+
     payload = {
         "model": "llama-3.1-8b-instant",
-        "messages": [
-            {"role": "system", "content": "You create viral 15-second YouTube Shorts scripts in Turkish. Return: HOOK, SCENE, TWIST, CAPCUT_PROMPT, TAGS."},
-            {"role": "user", "content": f"Create a viral {kind} short story for faceless anime-style video."}
-        ],
+        "input": prompt,
         "temperature": 0.9,
-        "max_tokens": 300,
-        "stream": False
+        "max_output_tokens": 300
     }
 
     try:
@@ -27,6 +29,7 @@ async def generate_story(kind: str):
             if r.status_code != 200:
                 return f"❌ Groq status={r.status_code}\n{r.text}"
             data = r.json()
-            return data["choices"][0]["message"]["content"]
+            # responses API farklı döner:
+            return data["output"][0]["content"][0]["text"]
     except Exception as e:
         return f"❌ İstek hatası: {e}"
