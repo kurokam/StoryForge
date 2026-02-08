@@ -5,6 +5,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 TOKEN = os.getenv("BOT_TOKEN")
 
+if not TOKEN:
+    raise ValueError("BOT_TOKEN ortam değişkeni tanımlı değil! Render Environment'e ekle.")
 USERS = {}  # {user_id: {"lang": "tr", "premium_until": date}}
 
 def is_premium(user_id):
