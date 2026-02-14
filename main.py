@@ -1,6 +1,11 @@
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from ai import generate_story
+from collections import defaultdict
+import time
+
+USER_LIMIT = defaultdict(lambda: {"count": 0, "date": time.strftime("%Y-%m-%d")})
+DAILY_LIMIT = 5
 
 TOKEN = os.getenv("BOT_TOKEN")
 
