@@ -25,7 +25,7 @@ async def generate_story(kind: str):
             },
             {
                 "role": "user",
-                "content": f"Theme: {kind}. Create a faceless anime-style horror short story."
+                "content": f"Theme: {kind}. Create a faceless horror short story."
             }
         ],
         "temperature": 0.8,
@@ -57,6 +57,4 @@ async def generate_story(kind: str):
         return "⏱️ AI geç cevap verdi. Tekrar dene."
 
     except Exception as e:
-        return f"❌ HTTP hata: {e}"            response = await client.post(URL, headers=headers, json=payload)
-
-            if response
+        return f"❌ HTTP hata: {e}"
