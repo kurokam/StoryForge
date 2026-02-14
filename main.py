@@ -17,6 +17,9 @@ TOKEN = os.getenv("BOT_TOKEN")
 USER_LIMIT = defaultdict(lambda: {"count": 0, "date": time.strftime("%Y-%m-%d")})
 DAILY_LIMIT = 5
 
+# Basit istatistik
+STATS = defaultdict(int)
+
 
 def main_menu_keyboard():
     keyboard = [
@@ -35,6 +38,27 @@ def main_menu_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 
+def split_story_and_scenes(text: str):
+    """
+    AI çıktısı formatı:
+    BASLIK:
+    ACIKLAMA:
+    SAHNELER:
+    1. ...
+    ...
+    ETIKETLER:
+    """
+    parts = {"main": text, "scenes": None}
+    try:
+        if "SAHNELER:" in text:
+            before, after = text.split("SAHNELER:", 1)
+            parts["main"] = before.strip()
+            parts["scenes"] = "SAHNELER:\n" + after.strip()
+    except Exception:
+        pass
+    return parts
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "👋 Hoş geldin!\n\n"
@@ -46,7 +70,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "📌 Menüden bir tür seç veya komut kullan:\n\n"
+        "📌 Menüden tür seç veya komut kullan:\n\n"
         "/korku\n"
         "/gizem\n"
         "/komplo\n"
@@ -73,10 +97,26 @@ async def _handle_story(update: Update, context: ContextTypes.DEFAULT_TYPE, kind
         return
 
     USER_LIMIT[uid]["count"] += 1
+    kalan = DAILY_LIMIT - USER_LIMIT[uid]["count"]
 
-    await update.effective_user.send_message(f"🧠 {kind.title()} hikayesi hazırlanıyor...")
+    STATS[kind] += 1
+
+    await update.effective_user.send_message(
+        f"🧠 {kind.title()} hikayesi hazırlanıyor...\n"
+        f"⏳ Kalan hakkın: {kalan}/{DAILY_LIMIT}"
+    )
+
     text = await generate_story(kind)
-    await update.effective_user.send_message(text)
+    parts = split_story_and_scenes(text)
+
+    # Ana metni gönder
+    await update.effective_user.send_message(parts["main"])
+
+    # Sahne varsa ayrı mesaj
+    if parts["scenes"]:
+        await update.effective_user.send_message(
+            "🎬 CapCut için sahneler aşağıda:\n\n" + parts["scenes"]
+        )
 
 
 async def on_menu_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -111,7 +151,6 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(CommandHandler("story", story))
-
     app.add_handler(CallbackQueryHandler(on_menu_click))
 
     print("🤖 Bot calisiyor...")
